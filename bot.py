@@ -37,9 +37,9 @@ def gun_attack(attacked):
     if attacked:
         dmg = min(randint(90, 100), attacked.health)
         attacked.health -= dmg
-        return True
+        return dmg
     else:
-        return False
+        return 0
 
 
 class Dueler:
@@ -47,14 +47,22 @@ class Dueler:
         self.user = member
         self.health = 100
 
-    @staticmethod
-    def fight(weapon, opponent):
+
+    def fight(self, weapon, opponent):
         if weapon == "knife":
-            knife_attack(opponent)
+            h_m = knife_attack(opponent)
         elif weapon == 'bow and arrow':
-            bow_attack(opponent)
+            h_m = bow_attack(opponent)
         elif weapon == 'gun':
-            gun_attack(opponent)
+            h_m = gun_attack(opponent)
+
+        return (self.user, weapon, h_m)
+
+    def healthBar(self):
+        list = ["\u2588" for i in range(self.health%10)]
+        while len(list) < 10: list.append('-')
+        return '\u2009'.join(list)
+
 
 
 @client.event
@@ -66,6 +74,13 @@ async def on_ready():
 @client.command()
 async def ping(ctx):
     await ctx.send(f'Murder latency is {round(client.latency * 1000)}ms')
+
+@client.command()
+async def quit(ctx):
+    if ctx.author.id in [436973854485643264, 437491079869104138]:
+        await ctx.send(f"As per the request of the Control Devil named {ctx.author.display_name}, I will murder myself.")
+        await client.logout()
+
 
 
 @client.command()
@@ -138,30 +153,31 @@ async def duel(ctx, member: discord.Member = None):
             reaction, user = await client.wait_for(event = 'reaction_add', timeout = 15.0, check = check)
         except asyncio.TimeoutError:
             await ctx.send('Timeout. You took too long!')
-
         else:
-               duelSim = discord.Embed(
-                   title = f"Begin! - __{ctx.author.display_name}__ vs __{member.display_name}__",
-                   colour = discord.Colour(0x91a386),
-                   description = f"{weapon[0][0]} chose {weapon[0][1]} and {weapon[1][0]} chose {weapon[1][1]}"
-               )
+            author = Dueler(ctx.author.display_name)
+            opponent = Dueler(member.display_name)
+            duelSim = discord.Embed(
+                title = f"Begin! - __{author.user}__ vs __{opponent.user}__",
+                colour = discord.Colour(0x91a386),
+                description = f"{weapon[0][0]} chose {weapon[0][1]} and {weapon[1][0]} chose {weapon[1][1]}"
+            )
 
-               duelSim.add_field(
-                   name = f"__{ctx.author.display_name}__", inline=True,
-                   value = "`health go brrr`"
-                )
+            duelSim.add_field(
+                name = f"__{author.user}__",
+                value = author.healthBar()
+             )
 
-               duelSim.add_field(
-                   name = f"__{member.display_name}__", inline=True,
-                   value = "`health go brrr`"
-               )
+            duelSim.add_field(
+                name = f"__{member.display_name}__",
+                value = opponent.healthBar()
+            )
 
-               duelSim.add_field(
-                   name = "\u200b", inline=False,
-                   value = "`bop`"
-               )
+            duelSim.add_field(
+                name = "\u200b", inline=False,
+                value = "`bop`"
+            )
 
-               await ctx.send(embed = duelSim)
+            DuelMsg = await ctx.send(embed = duelSim)
 
     else:
         await ctx.send("Mention a user to duel with.")
