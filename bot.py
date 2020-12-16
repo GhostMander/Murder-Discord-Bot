@@ -11,31 +11,40 @@ load_dotenv()
 client = commands.Bot(command_prefix = "m.", case_insensitive = True)
 client.remove_command('help')
 
+async def reaction_remover(message):
+    msg = await message.channel.fetch_message(message.id)
+    for i in msg.reactions:
+        l = await i.users().flatten()
+        if len(l) == 1:
+            continue
+        for j in l:
+            if j.id != 787288248094687252:
+                await msg.remove_reaction(i.emoji, j)
 
 def knife_attack(attacked):
-    attacked = random.choices([True, False], weights = [900, 100])
-    if attacked:
-        dmg = min(randint(10, 20), attacked.health)
+    killed = random.choices([True, False], weights = [900, 100])[0]
+    if killed:
+        dmg = min([random.randint(10, 20), attacked.health])
         attacked.health -= dmg
-        return True
+        return dmg
     else:
-        return False
+        return 0
 
 
 def bow_attack(attacked):
-    attacked = random.choices([True, False], weights = [600, 400])
-    if attacked:
-        dmg = min(randint(40, 50), attacked.health)
+    killed = random.choices([True, False], weights = [600, 400])[0]
+    if killed:
+        dmg = min([random.randint(40, 50), attacked.health])
         attacked.health -= dmg
-        return True
+        return dmg
     else:
-        return False
+        return 0
 
 
 def gun_attack(attacked):
-    attacked = random.choices([True, False], weights = [200, 800])
-    if attacked:
-        dmg = min(randint(90, 100), attacked.health)
+    killed = random.choices([True, False], weights = [200, 800])[0]
+    if killed:
+        dmg = min([random.randint(90, 100), attacked.health])
         attacked.health -= dmg
         return dmg
     else:
@@ -43,26 +52,31 @@ def gun_attack(attacked):
 
 
 class Dueler:
-    def __init__(self, member: discord.Member):
-        self.user = member
+    def __init__(self, member: discord.Member, weapon):
+        self.user = member.display_name
         self.health = 100
+        self.weapon = weapon
 
-
-    def fight(self, weapon, opponent):
-        if weapon == "knife":
+    def fight(self, opponent):
+        if self.weapon.lower() == "knife":
             h_m = knife_attack(opponent)
-        elif weapon == 'bow and arrow':
+        elif self.weapon.lower() == 'bow and arrow':
             h_m = bow_attack(opponent)
-        elif weapon == 'gun':
+        elif self.weapon.lower() == 'gun':
             h_m = gun_attack(opponent)
 
-        return (self.user, weapon, h_m)
+        if not h_m:
+            return f"*{self.user}* missed *{opponent.user}* While using {self.weapon}"
+        return f"**{self.user}** hits **{opponent.user}** using {self.weapon} for a WHOPPING **{h_m}** Damage!"
 
     def healthBar(self):
-        list = ["\u2588" for i in range(self.health%10)]
-        while len(list) < 10: list.append('-')
-        return '\u2009'.join(list)
+        hearts = (self.health) // 10
+        heartstr = "♥\u0020" * hearts
+        deadstr = ('\u2661\u0020' * (10 - hearts)).strip("\u0020")
+        return "`" + heartstr + deadstr + "`"
 
+    def new_weapon(self, weapon):
+        self.weapon = weapon
 
 
 @client.event
@@ -75,12 +89,12 @@ async def on_ready():
 async def ping(ctx):
     await ctx.send(f'Murder latency is {round(client.latency * 1000)}ms')
 
+
 @client.command()
 async def quit(ctx):
     if ctx.author.id in [436973854485643264, 437491079869104138]:
         await ctx.send(f"As per the request of the Control Devil named {ctx.author.display_name}, I will murder myself.")
         await client.logout()
-
 
 
 @client.command()
@@ -94,7 +108,7 @@ async def duel(ctx, member: discord.Member = None):
 
         weaponChoose.set_author(
             name = f"{ctx.author}",
-            icon_url = f"https://cdn.discordapp.com/avatars/{ctx.author.id}/{ctx.author.avatar}.png"
+            icon_url = ctx.author.avatar_url
         )
 
         weaponChoose.add_field(
@@ -108,6 +122,11 @@ async def duel(ctx, member: discord.Member = None):
         weaponChoose.add_field(
             name = "🔫",
             value = "Gun! Ranged Weapon that has the highest damage, but recoil makes it miss a few times!\nChance to hit  :  **20%**\nDamage Dealt :  **90 - 100**"
+        )
+
+        weaponChoose.add_field(
+            name = "\u3164", inline = False,
+            value = "Choose the First Weapon for either Side. You have 15 seconds."
         )
 
         chooseMsg = await ctx.send(embed = weaponChoose)
@@ -126,58 +145,86 @@ async def duel(ctx, member: discord.Member = None):
             if a:
                 if booleans[0]:
                     b = None
+
+                if ctx.author in set([i[0] for i in weapon]):
+                    if b in {'🔪', '🏹', '🔫'}:
+                        for i in range(len(weapon)):
+                            if weapon[i][0] == ctx.author:
+                                weapon.pop(i)
+
                 if b == '🔪':
-                    weapon.append((ctx.author.display_name, "Knife"))
+                    weapon.append((ctx.author, "Knife"))
                     booleans[0] = True
                 elif b == '🏹':
-                    weapon.append((ctx.author.display_name, "Bow and Arrow"))
+                    weapon.append((ctx.author, "Bow and Arrow"))
                     booleans[0] = True
                 elif b == '🔫':
-                    weapon.append((ctx.author.display_name, "Gun"))
+                    weapon.append((ctx.author, "Gun"))
                     booleans[0] = True
+
             elif c:
                 if booleans[1]:
                     b = None
+
+                if member in set([i[0] for i in weapon]):
+                    if b in {'🔪', '🏹', '🔫'}:
+                        for i in range(len(weapon)):
+                            if weapon[i][0] == member:
+                                weapon.pop(i)
+
+
                 if b == '🔪':
-                    weapon.append((member.display_name, "Knife"))
+                    weapon.append((member, "Knife"))
                     booleans[1] = True
                 elif b == '🏹':
-                    weapon.append((member.display_name, "Bow and Arrow"))
+                    weapon.append((member, "Bow and Arrow"))
                     booleans[1] = True
                 elif b == '🔫':
-                    weapon.append((member.display_name, "Gun"))
+                    weapon.append((member, "Gun"))
                     booleans[1] = True
             return booleans[0] and booleans[1]
 
         try:
-            reaction, user = await client.wait_for(event = 'reaction_add', timeout = 15.0, check = check)
+            reaction, user = await client.wait_for(event = 'reaction_add', timeout = 1.0, check = check)
         except asyncio.TimeoutError:
             await ctx.send('Timeout. You took too long!')
+            await reaction_remover(chooseMsg)
         else:
-            author = Dueler(ctx.author.display_name)
-            opponent = Dueler(member.display_name)
+            for i, j in weapon:
+                if i == ctx.author:
+                    author = Dueler(i, j)
+                elif i == member:
+                    opponent = Dueler(i, j)
+
+            await reaction_remover(chooseMsg)
+
             duelSim = discord.Embed(
-                title = f"Begin! - __{author.user}__ vs __{opponent.user}__",
+                title = f"__{author.user}__ vs __{opponent.user}__",
                 colour = discord.Colour(0x91a386),
-                description = f"{weapon[0][0]} chose {weapon[0][1]} and {weapon[1][0]} chose {weapon[1][1]}"
+                description = f"{author.user} chose **{author.weapon}** and {opponent.user} chose **{opponent.weapon}**"
             )
 
             duelSim.add_field(
-                name = f"__{author.user}__",
+                name = f"__{author.user} ({author.health}/100)__",
                 value = author.healthBar()
-             )
+            )
 
             duelSim.add_field(
-                name = f"__{member.display_name}__",
+                name = f"__{opponent.user} ({opponent.health}/100)__",
                 value = opponent.healthBar()
             )
 
             duelSim.add_field(
-                name = "\u200b", inline=False,
-                value = "`bop`"
+                name = "\u200b", inline = False,
+                value = author.fight(opponent)
             )
 
-            DuelMsg = await ctx.send(embed = duelSim)
+            duelSim.add_field(
+                name = "\u200b", inline = False,
+                value = opponent.fight(author)
+            )
+
+            await chooseMsg.edit(content = None, embed = duelSim)
 
     else:
         await ctx.send("Mention a user to duel with.")
