@@ -181,7 +181,7 @@ async def ping(ctx):
 
 @client.command()
 async def quit(ctx):
-    if ctx.author.id in [436973854485643264, 437491079869104138]:
+    if ctx.author.id in [os.getenv('AUTHOR_ID_1'), os.getenv('AUTHOR_ID_2')]:
         await ctx.send(f"As per the request of the Control Devil named {ctx.author.display_name}, I will murder myself.")
         await client.logout()
     else:
