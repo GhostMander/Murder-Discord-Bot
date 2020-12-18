@@ -1,10 +1,10 @@
-import os
 import asyncio
+import os
+import random
+
 import discord
 from discord.ext import commands
 from dotenv import load_dotenv
-
-import random
 
 load_dotenv()
 
@@ -118,11 +118,11 @@ class Dueler:
 
     def fight(self, opponent):
         if self.weapon.lower() == "knife":
-            h_m = attack(opponent, min_dmg = 10, max_dmg = 20, attack_chance = 90)          #WEAPON = KNIFE
+            h_m = attack(opponent, min_dmg = 10, max_dmg = 20, attack_chance = 90)  #WEAPON = KNIFE
         elif self.weapon.lower() == 'bow and arrow':
-            h_m = attack(opponent, min_dmg = 40, max_dmg = 50, attack_chance = 60)          #WEAPON = BOW
+            h_m = attack(opponent, min_dmg = 40, max_dmg = 50, attack_chance = 60)  #WEAPON = BOW
         elif self.weapon.lower() == 'gun':
-            h_m = attack(opponent, min_dmg = 90, max_dmg = 100, attack_chance = 20)         #WEAPON = GUN
+            h_m = attack(opponent, min_dmg = 90, max_dmg = 100, attack_chance = 20)  #WEAPON = GUN
 
         if not h_m:
             return f"**{self.user}** missed **{opponent.user}** While using **{self.weapon}**"
