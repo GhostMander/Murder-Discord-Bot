@@ -235,7 +235,7 @@ async def duel(ctx, member: discord.Member = None):
 
         chooseMsg = await ctx.send(embed = weaponChoose)
 
-        weapon = []
+        weapon = {}
         booleans = [False, False]
 
         await chooseMsg.add_reaction('🔪')
@@ -247,43 +247,25 @@ async def duel(ctx, member: discord.Member = None):
             b = str(reaction.emoji)
             c = user == member
             if a:
-                if booleans[0]:
-                    b = None
-
-                if ctx.author in set([i[0] for i in weapon]):
-                    if b in {'🔪', '🏹', '🔫'}:
-                        for i in range(len(weapon)):
-                            if weapon[i][0] == ctx.author:
-                                weapon.pop(i)
-
                 if b == '🔪':
-                    weapon.append((ctx.author, "Knife"))
+                    weapon[ctx.author] = "Knife"
                     booleans[0] = True
                 elif b == '🏹':
-                    weapon.append((ctx.author, "Bow and Arrow"))
+                    weapon[ctx.author] = "Bow and Arrow"
                     booleans[0] = True
                 elif b == '🔫':
-                    weapon.append((ctx.author, "Gun"))
+                    weapon[ctx.author] = "Gun"
                     booleans[0] = True
 
             elif c:
-                if booleans[1]:
-                    b = None
-
-                if member in set([i[0] for i in weapon]):
-                    if b in {'🔪', '🏹', '🔫'}:
-                        for i in range(len(weapon)):
-                            if weapon[i][0] == member:
-                                weapon.pop(i)
-
                 if b == '🔪':
-                    weapon.append((member, "Knife"))
+                    weapon[member] = "Knife"
                     booleans[1] = True
                 elif b == '🏹':
-                    weapon.append((member, "Bow and Arrow"))
+                    weapon[member] = "Bow and Arrow"
                     booleans[1] = True
                 elif b == '🔫':
-                    weapon.append((member, "Gun"))
+                    weapon[member] = "Gun"
                     booleans[1] = True
             return booleans[0] and booleans[1]
 
@@ -293,11 +275,8 @@ async def duel(ctx, member: discord.Member = None):
             await ctx.send('Timeout. You took too long!')
             await reaction_remover(chooseMsg)
         else:
-            for i, j in weapon:
-                if i == ctx.author:
-                    author = Dueler(i, j)
-                elif i == member:
-                    opponent = Dueler(i, j)
+            author = Dueler(ctx.author, weapon[ctx.author])
+            opponent = Dueler(member, weapon[member])
 
             await duel_main(ctx, chooseMsg, 1, author, opponent)
 
