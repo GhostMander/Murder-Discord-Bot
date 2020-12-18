@@ -28,30 +28,10 @@ async def reaction_remover(message):
                 await msg.remove_reaction(i.emoji, j)
 
 
-def knife_attack(attacked):
-    killed = random.choices([True, False], weights = [900, 100])[0]
+def attack(attacked, min_dmg, max_dmg, attack_chance):
+    killed = random.choices([True, False], weights = [attack_chance * 100000, (100 - attack_chance) * 100000])[0]
     if killed:
-        dmg = min([random.randint(10, 20), attacked.health])
-        attacked.health -= dmg
-        return dmg
-    else:
-        return 0
-
-
-def bow_attack(attacked):
-    killed = random.choices([True, False], weights = [600, 400])[0]
-    if killed:
-        dmg = min([random.randint(40, 50), attacked.health])
-        attacked.health -= dmg
-        return dmg
-    else:
-        return 0
-
-
-def gun_attack(attacked):
-    killed = random.choices([True, False], weights = [200, 800])[0]
-    if killed:
-        dmg = min([random.randint(90, 100), attacked.health])
+        dmg = min([random.randint(min_dmg, max_dmg), attacked.health])
         attacked.health -= dmg
         return dmg
     else:
@@ -138,11 +118,11 @@ class Dueler:
 
     def fight(self, opponent):
         if self.weapon.lower() == "knife":
-            h_m = knife_attack(opponent)
+            h_m = attack(opponent, min_dmg = 10, max_dmg = 20, attack_chance = 90)          #WEAPON = KNIFE
         elif self.weapon.lower() == 'bow and arrow':
-            h_m = bow_attack(opponent)
+            h_m = attack(opponent, min_dmg = 40, max_dmg = 50, attack_chance = 60)          #WEAPON = BOW
         elif self.weapon.lower() == 'gun':
-            h_m = gun_attack(opponent)
+            h_m = attack(opponent, min_dmg = 90, max_dmg = 100, attack_chance = 20)         #WEAPON = GUN
 
         if not h_m:
             return f"**{self.user}** missed **{opponent.user}** While using **{self.weapon}**"
@@ -182,11 +162,12 @@ async def ping(ctx):
 
 @client.command()
 async def quit(ctx):
-    if ctx.author.id in [os.getenv('AUTHOR_ID_1'), os.getenv('AUTHOR_ID_2')]:
+    if ctx.author.id in {int(os.getenv('AUTHOR_ID_1')), int(os.getenv('AUTHOR_ID_2'))}:
         await ctx.send(f"As per the request of the Control Devil named {ctx.author.display_name}, I will murder myself.")
         await client.logout()
     else:
         await ctx.send("GET OFF OUR LAWN")
+
 
 @client.command()
 async def invite(ctx):
