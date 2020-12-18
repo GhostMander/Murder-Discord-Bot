@@ -13,6 +13,7 @@ client = commands.Bot(command_prefix = "m.",
                       activity = discord.Game(name = 'Real Life Relationship Murder Simulator'),
                       status = discord.Status.online
                       )
+
 client.remove_command('help')
 
 
@@ -102,7 +103,7 @@ async def duel_main(ctx, editMessage, round, author, opponent):
     duelSim = discord.Embed(
         title = f"__{author.user}__ vs __{opponent.user}__",
         colour = discord.Colour(0x91a386),
-        description = f"{author.user} chose **{author.weapon}** and {opponent.user} chose **{opponent.weapon}**"
+        description = f"{author.user} chose **{author.weapon}** and {opponent.user} chose **{opponent.weapon}**\n\n**Choose a new or the same weapon for the next round!**"
     )
 
     duelSim.add_field(
@@ -144,8 +145,8 @@ class Dueler:
             h_m = gun_attack(opponent)
 
         if not h_m:
-            return f"*{self.user}* missed *{opponent.user}* While using {self.weapon}"
-        return f"**{self.user}** hits **{opponent.user}** using {self.weapon} for a WHOPPING **{h_m}** Damage!"
+            return f"**{self.user}** missed **{opponent.user}** While using **{self.weapon}**"
+        return f"**{self.user}** hits **{opponent.user}** using **{self.weapon}** for a WHOPPING __**{h_m}**__ Damage!"
 
     def healthBar(self):
         hearts = (self.health) // 10
